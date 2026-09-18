@@ -4,9 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database - SQLite (zero install, stored as a local file)
+// Database — auto-detect SQLite (local) vs PostgreSQL (production/Supabase)
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (connStr.StartsWith("Host=") || connStr.StartsWith("Server=") && connStr.Contains("supabase"))
+        options.UseNpgsql(connStr);
+    else
+        options.UseSqlite(connStr);
+});
 
 // Services
 builder.Services.AddScoped<IIncomeService, IncomeService>();
@@ -26,18 +32,21 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "Finance Tracker API", Version = "v1" });
 });
 
-// CORS — allow Angular dev server
+// CORS — allow Angular dev server + production Vercel URL
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-var app = builder.Build();
+var app = builder.Build();\
 
 // Auto-migrate on startup
 using (var scope = app.Services.CreateScope())
