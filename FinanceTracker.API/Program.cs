@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database — auto-detect SQLite (local) vs PostgreSQL (production/Supabase)
+// Database — auto-detect SQLite (local) vs PostgreSQL (Supabase/production)
 var connStr = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    if (connStr.StartsWith("Host=") || connStr.StartsWith("Server=") && connStr.Contains("supabase"))
+    if (connStr.StartsWith("Host=") || connStr.StartsWith("postgresql://") || connStr.StartsWith("postgres://"))
         options.UseNpgsql(connStr);
     else
         options.UseSqlite(connStr);
@@ -46,7 +46,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-var app = builder.Build();\
+var app = builder.Build();
 
 // Auto-migrate on startup
 using (var scope = app.Services.CreateScope())

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceTracker.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260911145048_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260918023456_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
